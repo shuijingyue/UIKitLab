@@ -8,13 +8,19 @@
 import UIKit
 
 class SquareCell : UICollectionViewCell {
-    static let reuseIdentifier = "square-cell-reuse-identifier"
+    
+    @objc private func onTap(sender: UITapGestureRecognizer) {
+        print(sender.view?.frame)
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
-        let view = UIView()
+        let view = UIControl()
+//        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(onTap));
+//        addGestureRecognizer(gestureRecognizer);
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = .blue
-        addSubview(view)
+        contentView.addSubview(view)
         contentView.addConstraints([
             view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),

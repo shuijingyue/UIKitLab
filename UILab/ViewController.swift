@@ -9,9 +9,14 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    private var collectionView: UICollectionView!
+    private var contentView: UIStackView!
+    private lazy var dataSource = makeDataSource()
+    
     override func loadView() {
         super.loadView()
-        let listView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewLayout())
+        let listView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
+        collectionView = listView
         listView.backgroundColor = .orange
         listView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(listView)
@@ -19,30 +24,64 @@ class ViewController: UIViewController {
             listView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             listView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             listView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            listView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            listView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 200)
         ])
-        listView.collectionViewLayout = makeLayout()
-        let dataSource = makeDataSource(collectionView: listView)
+
+//        listView.dataSource = makeDataSource(view: listView)
         listView.dataSource = dataSource
         
         var snapshot = NSDiffableDataSourceSnapshot<String, String>()
         snapshot.appendSections(["0"])
         snapshot.appendItems(["1", "2", "3", "4", "5", "6"])
-        dataSource.apply(snapshot)
+        dataSource.apply(snapshot, animatingDifferences: true)
+        
+        let scrollView = UIScrollView()
+        scrollView.backgroundColor = .yellow
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        NSLayoutConstraint.activate([
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.topAnchor.constraint(equalTo: collectionView.bottomAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+        let contentView = UIStackView()
+        contentView.axis = .vertical
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+        NSLayoutConstraint.activate([
+            contentView.heightAnchor.constraint(equalToConstant: 1000),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor)
+        ])
+        
+        let button = UIControl()
+        button.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 100).isActive = true
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.backgroundColor = .blue
+        contentView.addArrangedSubview(button)
+        contentView.addArrangedSubview(UIView())
+        self.contentView = contentView
     }
     
     private func makeLayout() -> UICollectionViewLayout {
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1/3), heightDimension: .absolute(100))
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1/4), heightDimension: .absolute(50))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(100))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(50))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        group.interItemSpacing = NSCollectionLayoutSpacing.fixed(4)
         let section = NSCollectionLayoutSection(group: group)
-        return UICollectionViewCompositionalLayout(section: section)
+        section.interGroupSpacing = 4
+        let config = UICollectionViewCompositionalLayoutConfiguration()
+        return UICollectionViewCompositionalLayout(section: section, configuration: config)
     }
     
-    private func makeDataSource(collectionView: UICollectionView) -> UICollectionViewDiffableDataSource<String, String> {
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<String, String> {
         let cellRegistration = UICollectionView.CellRegistration<SquareCell, String> { cell, indexPath, itemIdentifier in
-            print(cell)
+            
         }
         return UICollectionViewDiffableDataSource<String, String>(collectionView: collectionView) { collectionView, indexPath, item in
             return collectionView.dequeueConfiguredReusableCell(
@@ -53,8 +92,14 @@ class ViewController: UIViewController {
         };
     }
     
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        contentView.constraints.forEach({print($0.secondItem)})
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+   
         // Do any additional setup after loading the view.
     }
 }
